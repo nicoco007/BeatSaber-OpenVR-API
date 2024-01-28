@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Valve.VR</RootNamespace>
+    <DefineConstants>UNITY_5_3_OR_NEWER</DefineConstants>
+    <Platforms>x64</Platforms>
+    <Platform>x64</Platform>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <BeatSaberOutputType>Library</BeatSaberOutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.dll" Private="False" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll" Private="False" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(ProjectDir)..\OpenVR.Tasks\OpenVR.Tasks.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
+
+  <UsingTask TaskName="DownloadOpenVR" TaskFactory="TaskHostFactory" AssemblyFile="$(ProjectDir)..\OpenVR.Tasks\bin\$(Configuration)\OpenVR.Tasks.dll" />
+
+  <!-- Download the OpenVR API DLL and bindings -->
+  <Target Name="DownloadOpenVR" AfterTargets="BeforeBuild" DependsOnTargets="ResolveReferences;GetProjectInfo">
+    <DownloadOpenVR Version="$(Version)" DestinationFolder="$(ProjectDir)" />
+
+    <ItemGroup>
+      <Compile Remove="openvr_api.cs" />
+      <Compile Include="openvr_api.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="Native\openvr_api.dll" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Copy the native DLL to the artifact folder -->
+  <Target Name="CopyNativeToArtifact" AfterTargets="CopyToArtifact">
+    <Copy SourceFiles="$(TargetDir)Native\openvr_api.dll" DestinationFolder="$(ArtifactDir)Libs\Native" />
+  </Target>
+  
+  <!-- Clean up downloaded files -->
+  <Target Name="CleanOpenVR" AfterTargets="Clean">
+    <ItemGroup>
+      <FilesToDelete Include="$(ProjectDir)openvr_api.cs" />
+      <FilesToDelete Include="$(ProjectDir)Native\openvr_api.dll" />
+    </ItemGroup>
+
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
+</Project>
